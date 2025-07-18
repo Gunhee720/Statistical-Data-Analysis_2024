@@ -48,13 +48,15 @@ Assignment1_SDA/
 for i in range(n):
     for j in range(n):
         dist[i, j] = np.linalg.norm(X[i] - X[j])
-
-###  ✅ 방식 2: Vectorize 사용
+```
+#### ✅ 방식 2: Vectorize 사용
+```
 dists = np.sqrt(
     np.sum(X**2, axis=1)[:, np.newaxis] +
     np.sum(X**2, axis=1)[np.newaxis, :] -
     2 * np.dot(X, X.T)
 )
+```
 
 ### 수행시간 시각화
 
