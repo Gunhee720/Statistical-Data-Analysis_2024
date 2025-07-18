@@ -48,7 +48,8 @@
 | 반복문 기반 | 약 **712ms** |
 | 벡터화 기반 | 약 **44ms** ✅ 빠름 |
 
-> GPT를 활용해 내부함수를 제외한 순수 구현 방법을 확인해 검증함
+<img width="971" height="470" alt="image" src="https://github.com/user-attachments/assets/5909a2b7-4bed-43c7-925e-e08ded01b93f" />
+
 
 ---
 
@@ -58,7 +59,9 @@
 - 범례 오류 해결 (GPT 활용하여 `get_legend_handles_labels()`로 수정)
 - Outlier 스타일 개선
 
-> 📌 최대한 예시 이미지와 유사하게 시각화 결과 조정
+<img width="603" height="425" alt="image" src="https://github.com/user-attachments/assets/590c7757-a615-4767-836a-e3a258df97ce" />
+
+<img width="619" height="438" alt="image" src="https://github.com/user-attachments/assets/89afce4f-913e-4cf2-b2a9-21149508df13" />
 
 ---
 
@@ -95,6 +98,10 @@ p-value: 0.7074
 
 📈 **상관계수 ≈ 0.46** → **PER와 연봉은 양의 상관 관계**
 
+<img width="971" height="566" alt="image" src="https://github.com/user-attachments/assets/3d2c01d8-6d2f-4a4d-855d-f6a5a530da47" />
+
+<img width="818" height="579" alt="image" src="https://github.com/user-attachments/assets/0cfccf99-7088-47f0-b6ee-1d6ba9ffd98a" />
+
 ---
 
 ## 🧠 총평
@@ -107,6 +114,4 @@ p-value: 0.7074
 
 ---
 
-## 🔖 라이선스
 
-본 과제는 교육 목적의 분석 실습이며, 데이터는 공공 소스 또는 수업 제공 자료 기반입니다.
