@@ -55,3 +55,6 @@ dists = np.sqrt(
     np.sum(X**2, axis=1)[np.newaxis, :] -
     2 * np.dot(X, X.T)
 )
+
+<img width="836" height="491" alt="image" src="https://github.com/user-attachments/assets/e75b87e4-135d-4c3b-93be-e55eb5ab8e6c" />
+
