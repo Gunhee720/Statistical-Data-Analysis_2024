@@ -56,5 +56,8 @@ dists = np.sqrt(
     2 * np.dot(X, X.T)
 )
 
-<img width="836" height="491" alt="image" src="https://github.com/user-attachments/assets/e75b87e4-135d-4c3b-93be-e55eb5ab8e6c" />
+### 수행시간 시각화
+
+<img width="836" height="491" alt="image" src="https://github.com/user-attachments/assets/c772e6a8-882f-41fe-b4d0-f4664217c841" />
+
 
