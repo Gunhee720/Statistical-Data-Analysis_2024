@@ -1,103 +1,124 @@
-🎯 큐레이션 A/B 테스트 (컬리 ― 추석 선물 카테고리)
+# 🧪 큐레이션 A/B 테스트 (컬리 ― 추석 선물 카테고리)
 
-목적:
-상품 특징 중심(A안)보다 대상/상황 중심(B안) 큐레이션이 사용자 맥락에 더 잘 맞아
-클릭률(CTR), 구매전환율(CVR), 세션당 매출(RPS) 을 개선하는지 검증합니다.
+## 한눈 요약
+신규 큐레이션(B안)은 기존(A안) 대비 **CTR↑, CVR↑, Bounce↓, AOV↑, RPS↑**로 전환 퍼널 전반을 개선했습니다.  
+다중검정(Holm–Bonferroni) 보정 후에도 CTR/CVR/Bounce/AOV/RPS는 유의, 결제 단계 이탈률은 비유의입니다.  
+**제안:** B안을 점진 롤아웃(10%→50%→100%) 하되 결제·CS·배송 가드레일을 병행 모니터링.
 
-🧩 배경 & 가설
+---
 
-배경: 현재 ‘추석 선물’ 카테고리는 컬리온리/실용만점/프리미엄/다다익선 등 상품 특징 중심.
-실제 사용자는 “누구에게/어떤 상황에 선물할지”부터 고민 → 맥락 기반 발견이 중요.
+## 📌 배경 & 가설
 
-가설: 대상/상황 중심 큐레이션(B안)이 A안 대비 **CTR↑, CVR↑**로 퍼널을 개선한다.
+- **배경:** 현재 ‘추석 선물’ 카테고리는 ‘컬리온리’, ‘실용만점’, ‘프리미엄 선물세트’, ‘다다익선’ 등 상품 특징 중심 큐레이션이 운영됩니다. 이는 속성 파악엔 유리하지만, 실제 사용자는 먼저 “누구에게/어떤 상황에” 선물할지를 고민합니다.  
+- **가설:** 대상/상황 중심 큐레이션을 제공하면, 사용자가 자신의 맥락에 맞는 상품을 더 빨리 발견하고 큐레이션 클릭률(CTR) 및 카테고리 구매전환율(CVR)이 더 높아진다.
 
-🧪 A/B 테스트 설계
+---
 
-A (Control): 기존 테마 유지
-예) 컬리온리, 실용만점, 프리미엄 선물세트, 다다익선
+## 🧭 A/B 테스트 설계
 
-B (Experiment): 대상/상황 중심 테마
-예) #감사한 부모님께 · #센스있는 동료에게 · #마음을 전할 은사님께 · #부담없는 실속선물
+- **A (통제군):** 기존 테마 유지  
+  예) 컬리온리, 실용만점, 프리미엄 선물세트, 다다익선  
 
-트래픽 배분: 50:50 (seed 고정)
+- **B (실험군):** 대상/상황 중심 테마 노출  
+  예) `#감사한 부모님께`, `#센스있는 동료에게`, `#마음을 전할 은사님께`, `#부담없는 실속선물`  
 
-분석 단위: 세션(session)
+  → 기존 프리미엄/실용의 장점을 계승하되, 상황 대입·정서적 공감을 강화  
 
-🏗️ 데이터 생성 & 노이즈 주입 (시뮬레이션)
+- **트래픽 배분:** 50:50 (seed 고정)  
+- **분석 단위:** 세션(session)  
 
-현실 로그의 지저분함을 반영하기 위해 의도적으로 노이즈를 넣었습니다.
+---
 
-generate_raw_data()
-최근 2주 timestamp, device, page_views, clicked_curation, purchase_amount,
-purchased_flag, abandoned_at_payment 생성 (그룹별 CTR·CVR·Bounce·AOV 기대치 반영)
+## 🧪 데이터 생성 & 노이즈 주입
 
-generate_noisy_data()
+실제 로그의 “지저분함”을 반영하기 위해 의도적으로 노이즈를 삽입하고, 이후 전처리로 복원했습니다.
 
-중복 세션(예: 5%)
+- `generate_raw_data()` : 최근 2주 timestamp, device, page_views, clicked_curation, purchase_amount(원), purchased_flag, abandoned_at_payment 생성. 그룹별 CTR/CVR/Bounce/AOV 기대치를 반영.  
+- `generate_noisy_data()` :  
+  - 중복 세션(~5%)  
+  - device 오타(moblie, deskotp ~10%)  
+  - 구매금액 이상치(-5,000, 10,000,000, 20,000,000 ~1%)  
+  - 미래 시각 timestamp(~0.2%)  
+  - 클릭 결측(NaN)(~1%)  
 
-device 오타: moblie, deskotp (≈10%)
-
-구매금액 이상치: -5,000, 10,000,000, 20,000,000 (≈1%)
-
-미래 시각 timestamp (≈0.2%)
-
-클릭 결측(NaN) (≈1%)
-
+```python
+# 예시
 df_noisy = generate_noisy_data(num_sessions=10000, seed=42)
 df_noisy.to_csv("data/curation_ab_test_noisy.csv", index=False)
 
-🧹 전처리 파이프라인 (왜 이렇게 했나)
+## 🧼 전처리 파이프라인
 
-중복 제거: drop_duplicates(['session_id'])
+- **중복 제거:** `drop_duplicates(['session_id'])`  
+- **오타 정규화:** device → moblie→mobile, deskotp→desktop  
+- **구매금액 이상치 제거:** <0 또는 >1,000,000원 → NaN  
+- **시간 정제:** timestamp 파싱 후 미래 시각 행 제거  
+- **클릭 결측 처리:** clicked_curation NaN → 0 (미클릭 간주)  
 
-오타 정규화: moblie→mobile, deskotp→desktop
+**파생 변수:**  
+- `converted = (purchase_amount_filled > 0)`  
+- `bounced = (page_views == 1)`  
+- `abandon_pay = isna(purchase_amount)` (결제 단계 이탈로 정의)  
+- `revenue = purchase_amount_filled (NaN → 0)`  
 
-금액 이상치 제거: <0 또는 > 1,000,000원 → NaN
+---
 
-시간 정제: timestamp 파싱 → 미래 시각 행 제거
+## 🎯 핵심 지표
 
-클릭 결측 처리: clicked_curation NaN → 0(미클릭 간주)
+- **1순위 (Primary):** CTR(큐레이션 클릭률), CVR(카테고리 구매 전환율)  
+- **2순위 (Secondary):** AOV(구매자 1인당 평균 결제금액), Bounce(즉시 이탈률)  
+- **참고:** RPS(세션당 매출, Revenue per Session), Payment Abandon(결제 단계 이탈률)  
 
-파생 변수
+---
 
-converted = (purchase_amount_filled>0)
+## 🧠 분석 방법 (왜 이렇게 했나)
 
-bounced = (page_views==1)
+**비율 지표 (CTR/CVR/Bounce/Abandon)**  
+- 두 비율 z-검정 (`proportions_ztest`)  
+- Wilson CI (소표본·극단비에도 안정적인 신뢰구간)  
+- Holm–Bonferroni로 FWER 5% 통제 (여러 지표 동시 검정 시 거짓양성 억제)  
 
-abandon_pay = isna(purchase_amount) (결제 단계 이탈로 정의)
+**연속 지표 (AOV/RPS)**  
+- Welch t-test (`equal_var=False`) : 등분산 가정 회피, 분산 이질성에 안전  
+- 부트스트랩 CI(평균) : 분포 가정 최소화 (0이 많은 RPS에도 적합)  
 
-revenue = purchase_amount_filled (NaN→0)
+※ 큰 표본에서 정규성/등분산 사전검정은 과민할 수 있고, 사전검정→분기 전략은 오류율 왜곡 가능.  
+따라서 Welch + 부트스트랩 조합이 실무 표준적·안전합니다.  
 
-이유: 실제 로그에는 중복/오타/결측/이상치/미래시점 등 불량이 상존.
-실무형 전처리로 측정 편향을 최소화하고 재현 가능한 분석을 보장합니다.
+---
 
-📏 핵심 지표
+## 📊 결과 요약
 
-Primary:
+### ▪︎ 비율 지표 (Holm 보정 반영)
 
-CTR(큐레이션 클릭률), CVR(카테고리 구매 전환율)
+| Metric           | A       | B       | Diff (B−A) | Rel. Lift | p-value | Holm Sig |
+|------------------|---------|---------|------------|-----------|---------|----------|
+| CTR              | 9.85%   | 17.60%  | +7.75%p    | +78.7%    | <0.001  | ✅ |
+| CVR              | 1.43%   | 2.00%   | +0.58%p    | +40.3%    | <0.001  | ✅ |
+| Bounce           | 34.91%  | 28.89%  | −6.01%p    | −17.2%    | <0.001  | ✅ |
+| Payment Abandon  | 0.44%   | 0.52%   | +0.08%p    | +17.8%    | 0.073   | ❌ |
 
-Secondary:
+### ▪︎ 연속 지표
 
-AOV(구매자 1인당 평균 결제금액), Bounce(즉시 이탈률)
+| Metric   | A (mean, 95% CI)          | B (mean, 95% CI)          | Diff     | Rel. Lift | p-value   | Holm Sig |
+|----------|---------------------------|---------------------------|----------|-----------|-----------|----------|
+| AOV (₩)  | 67,975 (66,817~69,088)   | 71,952 (71,045~72,874)   | +3,977원 | +5.85%    | 1.08e−07  | ✅ |
+| RPS (₩)  | 970 (898~1,043)          | 1,441 (1,353~1,532)      | +471원   | +48.5%    | 1.76e−15  | ✅ |
 
-Reference:
+---
 
-RPS(세션당 매출 = 총매출/세션수), Payment Abandon(결제 단계 이탈률)
+## 해석
 
-🧠 분석 방법 (선택 근거)
+B안은 클릭→구매의 퍼널 전반을 개선했고, 그 결과 세션 효율(RPS)이 크게 증가했습니다.  
+결제 단계 이탈률은 통계적으로 유의한 차이가 없었습니다.
 
-비율 지표(CTR/CVR/Bounce/Abandon)
+## 결론 & 제안
 
-두 비율 z-검정(proportions_ztest), Wilson CI
+B 큐레이션 채택을 권장합니다.
 
-다중비교 보정: Holm–Bonferroni (FWER 5% 보장, Bonferroni보다 파워↑)
+CTR·CVR·Bounce·AOV·RPS가 보정 후에도 유의 개선
 
-연속 지표(AOV/RPS)
+**RPS 업리프트(≈+48.5%)**로 비즈니스 임팩트 큼
 
-Welch t-test(equal_var=False): 등분산 가정 회피, 분산 이질성에 안전
+롤아웃 전략: 10% → 50% → 100% 점진 확대, 가드레일 동시 모니터링
 
-부트스트랩 CI(평균): 분포 가정 최소화(RPS처럼 0이 많은 분포에 유리)
-
-대용량에서 정규성/등분산 사전검정은 과민하며, 사전검정→분기 전략은 1종 오류율 왜곡 가능.
-⇒ Welch + 부트스트랩 조합이 안전한 실무 표준.
+추가 분석: 세그먼트/기간 강건성, 유저 단위 검증, 프로덕션 데이터 재실험
